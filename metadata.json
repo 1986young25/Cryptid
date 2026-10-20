@@ -1,0 +1,6 @@
+{
+  "name": "Cryptid Brain - Aura Decision Plan & Control Matrix",
+  "description": "Sovereign tactical command platform integrating Project Cryptid diamond lattice battery telemetry, MMRM air-core propulsion, ATRM acoustic nullification, and the Aura decision control matrix under Nicholas Young Master Trust governance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

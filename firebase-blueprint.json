@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "TelemetryLog": {
+      "title": "Telemetry Log Entry",
+      "description": "Cryptid Brain runtime event and sensor telemetry record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "type": { "type": "string" },
+        "message": { "type": "string", "maxLength": 500 },
+        "hash": { "type": "string", "maxLength": 64 },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "type", "message", "hash", "userId"]
+    },
+    "DecisionState": {
+      "title": "Decision State Matrix",
+      "description": "Aura decision matrix apex weights and entropy parameters.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "entropyFloor": { "type": "number" },
+        "mahDistance": { "type": "number" },
+        "weights": {
+          "type": "object",
+          "properties": {
+            "w1_swarm": { "type": "number" },
+            "w2_harmonic": { "type": "number" },
+            "w3_entropy": { "type": "number" },
+            "w4_interference": { "type": "number" },
+            "w5_dsp": { "type": "number" },
+            "w6_silicon": { "type": "number" }
+          }
+        },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "entropyFloor", "mahDistance", "weights"]
+    },
+    "TelemetryArchive": {
+      "title": "Long-Term Telemetry Archive",
+      "description": "Distinct long-term cold archive capturing aggregated telemetry snapshots, state roots, and UCC proof-of-reserve seals.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "archiveId": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "recordCount": { "type": "number" },
+        "entropyMean": { "type": "number" },
+        "mahalanobisMean": { "type": "number" },
+        "stateHashRoot": { "type": "string", "maxLength": 128 },
+        "uccSeal": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "archiveId", "timestamp", "recordCount", "stateHashRoot", "uccSeal", "userId"]
+    }
+  },
+  "firestore": {
+    "/telemetryLogs/{logId}": {
+      "schema": "TelemetryLog",
+      "description": "Real-time stream of Cryptid Brain telemetry logs."
+    },
+    "/decisionStates/{stateId}": {
+      "schema": "DecisionState",
+      "description": "Saved decision matrix states per user."
+    },
+    "/telemetryArchives/{archiveId}": {
+      "schema": "TelemetryArchive",
+      "description": "Distinct long-term telemetry archive with UCC-CER-NYMT cryptographic state root seals."
+    }
+  }
+}

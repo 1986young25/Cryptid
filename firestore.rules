@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidTelemetryLog(data) {
+      return data.keys().hasAll(['id', 'timestamp', 'type', 'message', 'hash', 'userId']) &&
+             data.keys().hasOnly(['id', 'timestamp', 'type', 'message', 'hash', 'userId', 'createdAt']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.timestamp is string && data.timestamp.size() <= 32 &&
+             data.type is string && data.type.size() <= 64 &&
+             data.message is string && data.message.size() <= 500 &&
+             data.hash is string && data.hash.size() <= 64 &&
+             data.userId is string && data.userId == request.auth.uid;
+    }
+
+    function isValidDecisionState(data) {
+      return data.keys().hasAll(['id', 'userId', 'entropyFloor', 'mahDistance', 'weights']) &&
+             data.keys().hasOnly(['id', 'userId', 'entropyFloor', 'mahDistance', 'weights', 'updatedAt']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.entropyFloor is number &&
+             data.mahDistance is number &&
+             data.weights is map;
+    }
+
+    function isValidTelemetryArchive(data) {
+      return data.keys().hasAll(['id', 'archiveId', 'timestamp', 'recordCount', 'stateHashRoot', 'uccSeal', 'userId']) &&
+             data.keys().hasOnly(['id', 'archiveId', 'timestamp', 'recordCount', 'entropyMean', 'mahalanobisMean', 'stateHashRoot', 'uccSeal', 'userId', 'createdAt']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.archiveId is string && data.archiveId.size() <= 128 &&
+             data.timestamp is string && data.timestamp.size() <= 32 &&
+             data.recordCount is number &&
+             data.stateHashRoot is string && data.stateHashRoot.size() <= 128 &&
+             data.uccSeal is string && data.uccSeal.size() <= 128 &&
+             data.userId is string && data.userId == request.auth.uid;
+    }
+
+    match /telemetryLogs/{logId} {
+      allow get, list: if isSignedIn();
+      
+      allow create: if isSignedIn() &&
+                    isValidId(logId) &&
+                    isValidTelemetryLog(request.resource.data);
+
+      allow update: if isSignedIn() &&
+                    isValidTelemetryLog(request.resource.data) &&
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.id == resource.data.id;
+
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /decisionStates/{stateId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if isSignedIn() &&
+                    isValidId(stateId) &&
+                    isValidDecisionState(request.resource.data);
+
+      allow update: if isSignedIn() &&
+                    isValidDecisionState(request.resource.data) &&
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.id == resource.data.id;
+
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /telemetryArchives/{archiveId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if isSignedIn() &&
+                    isValidId(archiveId) &&
+                    isValidTelemetryArchive(request.resource.data);
+
+      allow update: if isSignedIn() &&
+                    isValidTelemetryArchive(request.resource.data) &&
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.id == resource.data.id;
+
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
